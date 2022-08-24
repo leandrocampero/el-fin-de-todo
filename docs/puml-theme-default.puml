@@ -1,0 +1,19 @@
+' @startuml default
+' help skinparam
+' @enduml
+
+skinparam Style strictuml
+skinparam defaultFontName Monaco
+skinparam dpi 300
+skinparam RoundCorner 0
+
+skinparam Sequence {
+  Participant {
+    BackgroundColor white
+    Padding 20
+  }
+  Actor {
+    BackgroundColor white
+  }
+  MessageAlignment center
+}

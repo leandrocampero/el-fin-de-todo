@@ -1,6 +1,13 @@
 @startuml CU01 Conectar Billetera
-skinparam Style strictuml
-A -> B: Hello()
-A <- B: Hi()
+'Importar tema
+!theme default from ../
+
+'Definir actores y entidades participantes
+actor Usuario as A
+participant ":Billeteras" as B
+participant ":Contrato" as C
+
+A -> B: [Conectar billetera] \n conectar(direccion): Bool
+B -> C: [Firmar mensaje] \n signMessage(direccion, mensaje): String
 
 @enduml

@@ -1,0 +1,6 @@
+@startuml CU01 Conectar Billetera
+skinparam Style strictuml
+A -> B: Hello()
+A <- B: Hi()
+
+@enduml

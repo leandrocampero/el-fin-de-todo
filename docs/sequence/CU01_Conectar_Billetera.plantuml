@@ -2,12 +2,40 @@
 'Importar tema
 !theme default from ../
 
-'Definir actores y entidades participantes
-actor Usuario as A
-participant ":Billeteras" as B
-participant ":Contrato" as C
+title CU01 Conectar Billetera
 
-A -> B: [Conectar billetera] \n conectar(direccion): Bool
-B -> C: [Firmar mensaje] \n signMessage(direccion, mensaje): String
+'Definir actores y entidades participantes
+actor Usuario as u
+boundary "GUI" as app
+participant ":Billeteras" as b
+participant ":Contrato" as c
+
+u -> app: [Conectar billetera]
+activate app
+
+note over b, c 
+Tanto Billeteras como Contrato son clases frontera.
+Contienen los atributos y métodos para interactuar
+con la billetera (Metamask) y con el contrato (en
+la blockchain)
+end note
+
+app -> b: conectar(direccion): bool
+activate b
+
+b -> b : signMessage(direccion, mensaje): string
+note right of b
+Método provisto por interfaz
+con Metamask
+end note
+
+b -> c: verificarFirma(direccion, mensaje, firma): bool
+activate c
+deactivate c
+note left of c
+¿Debería verificar si está 
+bloqueado al mismo tiempo?
+end note
+
 
 @enduml

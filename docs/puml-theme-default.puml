@@ -3,9 +3,12 @@
 ' @enduml
 
 skinparam Style strictuml
-skinparam defaultFontName Monaco
+skinparam defaultFontName Ubuntu
+skinparam DefaultFontSize 12
 skinparam dpi 300
 skinparam RoundCorner 0
+skinparam BoxPadding 0
+skinparam Padding 5
 
 skinparam Sequence {
   Participant {
@@ -15,5 +18,10 @@ skinparam Sequence {
   Actor {
     BackgroundColor white
   }
-  MessageAlignment center
+  Box {
+    BackgroundColor whitesmoke
+  }
+  Message {
+    Alignment center
+  }
 }

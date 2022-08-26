@@ -1,0 +1,30 @@
+{
+  "Diagrama UML": {
+    "prefix": "new uml",
+    "scope": "puml, plantuml",
+    "body": [
+      "@startuml $titulo",
+      "!theme default from ../",
+      "'###############################################################################",
+      "title $titulo",
+      "'###############################################################################",
+      "",
+      "",
+      "@enduml"
+    ],
+    "description": "Plantilla para nuevo diagrama UML"
+  },
+  "Separador": {
+    "prefix": "separator",
+    "scope": "puml, plantuml",
+    "body": [
+      "",
+      "",
+      "'###############################################################################",
+      "'###############################################################################",
+      "",
+      ""
+    ],
+    "description": "Separador de múltiples diagramas en caso de haberlos"
+  }
+}

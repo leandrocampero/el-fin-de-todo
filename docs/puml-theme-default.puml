@@ -3,7 +3,7 @@
 ' @enduml
 
 skinparam Style strictuml
-skinparam defaultFontName Ubuntu
+skinparam defaultFontName Helvetica
 skinparam DefaultFontSize 12
 skinparam dpi 300
 skinparam RoundCorner 0

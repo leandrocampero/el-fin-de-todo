@@ -1,15 +1,20 @@
 {
   "Diagrama UML": {
-    "prefix": "new uml",
+    "prefix": "uml",
     "scope": "puml, plantuml",
     "body": [
       "@startuml $titulo",
-      "!theme default from ../",
-      "'###############################################################################",
-      "title $titulo",
-      "'###############################################################################",
-      "",
-      "",
+      "\t!theme default from ../",
+      "\t'#############################################################################",
+      "\ttitle $titulo",
+      "\t'#############################################################################",
+      "\t'Definir actores y entidades participantes",
+      "\tactor Usuario as user",
+      "\t",
+      "\t'#############################################################################",
+      "\t'Iniciar secuencia",
+      "\t",
+      "\t",
       "@enduml"
     ],
     "description": "Plantilla para nuevo diagrama UML"
@@ -20,11 +25,31 @@
     "body": [
       "",
       "",
-      "'###############################################################################",
-      "'###############################################################################",
+      "'-------------------------------------------------------------------------------",
+      "'-------------------------------------------------------------------------------",
       "",
       ""
     ],
     "description": "Separador de múltiples diagramas en caso de haberlos"
+  },
+  "Nota a la izquierda": {
+    "prefix": "note left",
+    "scope": "puml, plantuml",
+    "body": [
+      "note left",
+      "\t$text",
+      "end note"
+    ],
+    "description": "Creador de nota de múltiples líneas"
+  },
+  "Proceso": {
+    "prefix": "process",
+    "scope": "puml, plantuml",
+    "body": [
+      "activate $entidad",
+      "\t$text",
+      "deactivate $entidad"
+    ],
+    "description": "Nuevo proceso"
   }
 }

@@ -1,0 +1,143 @@
+@startuml Crear Órdenes
+  !theme default from ../
+  '#############################################################################
+  title Crear Órdenes
+  '#############################################################################
+  'Definir actores y entidades participantes
+  actor Usuario as user
+  participant ":GestorOrdenes" as go
+  participant ":BlockchainAdapter" as adapter
+  participant "Metamask" as wallet
+
+  '#############################################################################
+  'Iniciar secuencia
+  user -> go: [Crear Órden] NuevaOrden(orden): Ordenes
+  activate go
+    go -> adapter: NuevaOrden(orden): boolean
+    note left
+      En la creación de la orden se usa
+      el mismo método, especificando el
+      tipo (intercambio o compra-venta).
+    end note
+
+    activate adapter
+      adapter -> adapter: ConsultarSaldo(billetera, token): bigint
+      activate adapter
+      deactivate adapter
+
+      adapter -> adapter: EstadoPlataforma(): number
+      activate adapter
+      deactivate adapter
+
+      adapter -> adapter: BuscarTokens(token): Tokens
+      activate adapter
+        note left
+          Consultar estado de
+          tokens a utilizar
+        end note
+      deactivate adapter
+
+      adapter -> adapter: BuscarBilletera(billetera)
+      activate adapter
+        note left
+          Consultar estado de
+          la billetera
+        end note
+      deactivate adapter
+
+      adapter -> adapter: BuscarOrdenes(Ordenes)
+      activate adapter
+        note left
+          Consultar la existencia
+          de una orden opuesta
+          para ejecutarla en lugar
+          de crear una nueva
+        end note
+      deactivate adapter
+
+      alt No existe una orden opuesta
+        adapter -> wallet: [CU04 - Confirmar Acción]
+      else Existe una orden opuesta
+        adapter -> adapter: EjecutarOrden(tipo, idOrden, comprador): boolean
+        activate adapter
+        deactivate adapter
+      end
+
+    deactivate adapter
+  deactivate go
+@enduml
+
+
+'-------------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
+
+
+@startuml Ejecutar Órdenes
+  !theme default from ../
+  '#############################################################################
+  title Ejecutar Órdenes
+  '#############################################################################
+  'Definir actores y entidades participantes
+  actor Usuario as user
+  participant ":GestorOrdenes" as go
+  participant ":Ordenes" as orden
+  participant ":BlockchainAdapter" as adapter
+  participant "Oráculo" as orac
+  participant "Metamask" as wallet
+
+  '#############################################################################
+  'Iniciar secuencia
+  user -> go: [Listar Órdenes]\nBuscarOrdenes(orden)\n: Array<Ordenes>
+  activate go
+    note over orden
+      A través del mismo método (en base
+      al tipo de órden y estado) se pueden
+      realizar los casos de uso:
+      * CU22 - Ver Mis Órdenes
+      * CU26 - Listar órdenes
+      * CU28 - Mostrar Historial de Órdenes
+    end note
+    go -> adapter: BuscarOrdenes(orden): Array<Ordenes>
+    activate adapter
+    deactivate adapter
+  deactivate go
+
+  user -> orden: Ejecutar(): string
+  activate orden
+    group Tipo de órden: Intercambio
+      orden -> adapter: ConsultarCotizacion(compra, venta): json
+      activate orden
+        activate adapter
+          adapter -> orac: [Consulta cotización de la dupla]
+        deactivate adapter
+
+        note right orden
+          La aplicación solicita confirmación
+          de la cotización al usuario
+        end note
+      deactivate orden
+    end
+
+    orden -> adapter: BuscarBilletera(billetera)
+    activate adapter
+      note right
+        Consultar estado de
+        la billetera
+      end note
+    deactivate adapter
+
+    orden -> adapter: ConsultarSaldo(billetera, token): bigint
+    activate adapter
+      note right
+        Consultar balance de
+        token a cambiar
+      end note
+    deactivate adapter
+
+    orden -> adapter: EjecutarOrden(tipo, idOrden, comprador): boolean
+    activate adapter
+      adapter -> wallet: [CU04 - Confirmar Acción]
+    deactivate adapter
+
+  deactivate orden
+@enduml

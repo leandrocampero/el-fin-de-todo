@@ -1,0 +1,44 @@
+@startuml Conectar y Desconectar Billetera
+  !theme default from ../
+  '#############################################################################
+  title Conectar y Desconectar Billetera
+  '#############################################################################
+  'Definir actores y entidades participantes
+  actor Usuario as user
+  participant ":BlockchainAdapter" as adapter
+  participant "Metamask" as wallet
+  participant ":GestorBilleteras" as gb
+
+  '#############################################################################
+  'Iniciar secuencia
+  == Conectar Billetera ==
+
+  user -> adapter: [Conectar Billetera] Conectar(): boolean
+  activate adapter
+    adapter -> wallet: [Solicita acceso dirección de la billetera]
+    note right
+      Espera a que el usuario confirme
+      (solo para la primera conexión de
+      la billetera a la plataforma)
+      Devuelve la dirección de la 
+      billetera actual.
+    end note
+
+    adapter -> adapter: BuscarBilletera(billetera)
+    activate adapter
+      note left
+        Se consulta por el
+        estado y rol de la
+        billetera usando
+        la dirección de 
+        la misma
+      end note
+    deactivate adapter
+
+    adapter -> gb: NuevaBilletera(Billeteras)
+  deactivate adapter
+
+  == Desconectar Billetera ==
+
+  user -> adapter: [Desconectar Billetera] Desconectar(): boolean
+@enduml

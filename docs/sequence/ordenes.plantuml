@@ -5,66 +5,77 @@
   '#############################################################################
   'Definir actores y entidades participantes
   actor Usuario as user
-  participant ":GestorOrdenes" as go
-  participant ":BlockchainAdapter" as adapter
-  participant "Metamask" as wallet
+  participant "Aplicacion\n(Cliente)" as app
+  participant "Metamask\n(Wallet)" as wallet
+  participant "Contrato de Plataforma\n(Blockchain)" as contrato
+  participant "ChainLink \n(Oraculo)" as oraculo
+  participant "Contrato ERC20 \n(Token)" as token
 
   '#############################################################################
   'Iniciar secuencia
-  user -> go: [Crear Órden] NuevaOrden(orden): Ordenes
-  activate go
-    go -> adapter: NuevaOrden(orden): boolean
-    note left
-      En la creación de la orden se usa
-      el mismo método, especificando el
-      tipo (intercambio o compra-venta).
+  user -> app: [Crear Órden] nuevaOrden(...)
+  note right
+    Parámetro: {
+      tokenCompra: string
+      tokenVenta: string
+      montoCompra: bigint
+      montoCompra: bigint
+      tipo: number
+    }
+  end note
+  activate app
+    app -> contrato: buscarGemela(...): boolean
+    note right
+      Se pasa como paraámetros los mismos
+      usados para crear la orden
     end note
 
-    activate adapter
-      adapter -> adapter: ConsultarSaldo(billetera, token): bigint
-      activate adapter
-      deactivate adapter
+    alt No existe una orden espejada
+      app -> wallet: [CU04 - Confirmar Acción]
 
-      adapter -> adapter: EstadoPlataforma(): number
-      activate adapter
-      deactivate adapter
+      app -> contrato: nuevaOrden(...)
+      note over contrato
+        El contrato se encarga de realizar los 
+        controles necesarios para crear la orden
+      end note
 
-      adapter -> adapter: BuscarTokens(token): Tokens
-      activate adapter
+      activate contrato
+        contrato -> contrato: consultarCotizacion(token: string): bigint
+        activate contrato
+          contrato -> oraculo: latestRoundData(): bigint
+          note left
+            Usado para determinar si el monto de
+            venta es superior al mínimo impuesto
+            por la plataforma
+          end note
+        deactivate contrato
+
+        contrato -> token: balanceOf(address: string): bigint
         note left
-          Consultar estado de
-          tokens a utilizar
+          Usado para determinar si la billetera
+          tiene fondos suficientes para depositar
+          y crear la orden
         end note
-      deactivate adapter
 
-      adapter -> adapter: BuscarBilletera(billetera)
-      activate adapter
+        contrato -> token: allowance(owner: string, spender: string): bigint
         note left
-          Consultar estado de
-          la billetera
+          Usado para determinar si el usuario
+          autorizó un al contrato de plataforma
+          transferir el monto a depositar para
+          crear la orden
         end note
-      deactivate adapter
 
-      adapter -> adapter: BuscarOrdenes(Ordenes)
-      activate adapter
+        contrato -> token: transferFrom(from: string, to: string, amount: bigint): boolean
         note left
-          Consultar la existencia
-          de una orden opuesta
-          para ejecutarla en lugar
-          de crear una nueva
+          Transferir los tokens del vendedor al
+          contrato para tener la custodia hasta
+          que la orden se ejecute
         end note
-      deactivate adapter
-
-      alt No existe una orden opuesta
-        adapter -> wallet: [CU04 - Confirmar Acción]
-      else Existe una orden opuesta
-        adapter -> adapter: EjecutarOrden(tipo, idOrden, comprador): boolean
-        activate adapter
-        deactivate adapter
-      end
-
-    deactivate adapter
-  deactivate go
+      deactivate contrato
+    else Existe una orden espejada
+      app -> user: [Mensaje: existe una orden\nespejo para ejecutar]
+    end
+  deactivate app
 @enduml
 
 
@@ -79,17 +90,18 @@
   '#############################################################################
   'Definir actores y entidades participantes
   actor Usuario as user
-  participant ":GestorOrdenes" as go
-  participant ":Ordenes" as orden
-  participant ":BlockchainAdapter" as adapter
-  participant "Oráculo" as orac
-  participant "Metamask" as wallet
+  participant "Aplicacion\n(Cliente)" as app
+  participant "Metamask\(Wallet)" as wallet
+  participant "Contrato de Plataforma\n(Blockchain)" as contrato
+  participant "ChainLink \n(Oraculo)" as oraculo
+  participant "Contrato ERC20 \n(Token de Compra)" as tokenCompra
+  participant "Contrato ERC20 \n(Token de Venta)" as tokenVenta
 
   '#############################################################################
   'Iniciar secuencia
-  user -> go: [Listar Órdenes]\nBuscarOrdenes(orden)\n: Array<Ordenes>
-  activate go
-    note over orden
+  user -> app: [Listar Órdenes]\nlistarOrdenesActivas()\n: Array<Orden>
+  activate app
+    note over contrato
       A través del mismo método (en base
       al tipo de órden y estado) se pueden
       realizar los casos de uso:
@@ -97,47 +109,69 @@
       * CU26 - Listar órdenes
       * CU28 - Mostrar Historial de Órdenes
     end note
-    go -> adapter: BuscarOrdenes(orden): Array<Ordenes>
-    activate adapter
-    deactivate adapter
-  deactivate go
+    
+    app -> contrato: listarOrdenes(puntoPartida: string, ventana: int):\nArray<Ordenes>
+    activate app
+    deactivate app
+  deactivate app
 
-  user -> orden: Ejecutar(): string
-  activate orden
-    group Tipo de órden: Intercambio
-      orden -> adapter: ConsultarCotizacion(compra, venta): json
-      activate orden
-        activate adapter
-          adapter -> orac: [Consulta cotización de la dupla]
-        deactivate adapter
+  user -> app: ejecutarOrden(idOrden: string)
+  activate app
+    app -> wallet: [CU04 - Confirmar Acción]
 
-        note right orden
-          La aplicación solicita confirmación
-          de la cotización al usuario
+    app -> contrato: ejecutarOrden(idOrden: string)
+    activate contrato
+      note over contrato
+        El contrato se encarga de realizar los 
+        controles necesarios para ejecutar la orden
+      end note
+
+      group Tipo de órden: Intercambio
+        note over contrato
+          En el caso de ordenes de intercambio se
+          tiene que consultar las cotizaciones
+          para poder determinar la relación de cambio
+          entre ambos tokens en participantes
         end note
-      deactivate orden
-    end
+        contrato -> contrato: consultarCotizacion(token: string): bigint
+        activate contrato
+          contrato -> oraculo: latestRoundData(): bigint
+        deactivate contrato
 
-    orden -> adapter: BuscarBilletera(billetera)
-    activate adapter
-      note right
-        Consultar estado de
-        la billetera
+        contrato -> contrato: consultarCotizacion(token: string): bigint
+        activate contrato
+          contrato -> oraculo: latestRoundData(): bigint
+        deactivate contrato
+
+      end
+
+      contrato -> tokenCompra: balanceOf(address: string): bigint
+      note left
+        Consultar fondos de la billetera
+        compradora (monto del token a 
+        comprar)
       end note
-    deactivate adapter
 
-    orden -> adapter: ConsultarSaldo(billetera, token): bigint
-    activate adapter
-      note right
-        Consultar balance de
-        token a cambiar
+      contrato -> tokenCompra: allowance(owner: string, spender: string): bigint
+      note left
+        Consultar la autorización del usuario
+        para que el contrato de plataforma 
+        pueda ransferir los tokens de compra
+        al vendedor (creador de la orden)
       end note
-    deactivate adapter
 
-    orden -> adapter: EjecutarOrden(tipo, idOrden, comprador): boolean
-    activate adapter
-      adapter -> wallet: [CU04 - Confirmar Acción]
-    deactivate adapter
+      contrato -> tokenCompra: transferFrom(from: string, to: string, amount: bigint): boolean
+      note left
+        Transferir los tokens del comprador
+        al vendedor
+      end note
 
-  deactivate orden
+      contrato -> tokenVenta: transfer(from: string, to: string, amount: bigint): boolean
+      note left
+        Transferir los tokens del vendedor
+        (guardados en el contrato de 
+        plataforma) al comprador
+      end note
+    deactivate contrato
+  deactivate app
 @enduml

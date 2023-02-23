@@ -5,18 +5,18 @@
   '#############################################################################
   'Definir actores y entidades participantes
   actor Usuario as user
-  participant ":BlockchainAdapter" as adapter
-  participant "Metamask" as wallet
-  participant ":GestorBilleteras" as gb
+  participant "Aplicacion\n(Cliente)" as app
+  participant "Metamask\n(Wallet)" as wallet
+  participant "Contrato de Plataforma\n(Blockchain)" as contrato
 
   '#############################################################################
   'Iniciar secuencia
   == Conectar Billetera ==
 
-  user -> adapter: [Conectar Billetera] Conectar(): boolean
-  activate adapter
-    adapter -> wallet: [Solicita acceso dirección de la billetera]
-    note right
+  user -> app: [Conectar Billetera]\nconectarBilletera()
+  activate app
+    app -> wallet: [CU04 - Confirmar Acción]
+    note over wallet
       Espera a que el usuario confirme
       (solo para la primera conexión de
       la billetera a la plataforma)
@@ -24,21 +24,47 @@
       billetera actual.
     end note
 
-    adapter -> adapter: BuscarBilletera(billetera)
-    activate adapter
-      note left
-        Se consulta por el
-        estado y rol de la
-        billetera usando
-        la dirección de 
-        la misma
+    app -> contrato: buscarBilletera(address: string)
+    note over wallet
+        Se consulta por el estado y rol
+        de la billetera usando la dirección
+        de la misma
       end note
-    deactivate adapter
-
-    adapter -> gb: NuevaBilletera(Billeteras)
-  deactivate adapter
+  deactivate app
 
   == Desconectar Billetera ==
 
-  user -> adapter: [Desconectar Billetera] Desconectar(): boolean
+  user -> app: [Desconectar Billetera]\ndesconectarBilletera()
+@enduml
+
+
+'-------------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
+
+@startuml Hacer Administrador
+  !theme default from ../
+  '#############################################################################
+  title Hacer Administrador
+  '#############################################################################
+  'Definir actores y entidades participantes
+  actor Propietario as propietario
+  participant "Aplicacion\n(Cliente)" as app
+  participant "Metamask\n(Wallet)" as wallet
+  participant "Contrato de Plataforma\n(Blockchain)" as contrato
+  
+  '#############################################################################
+  'Iniciar secuencia
+  propietario -> app: [Nuevo administrador]:\n nuevoAdministrador(billetera: string)
+  activate app
+    app -> wallet: [CU04 - Confirmar Acción]
+    app -> contrato: nuevoAdministrador(billletera: string)
+
+    activate contrato
+      note left
+        Se consulta por el estado y rol
+        de la billetera usando la dirección
+        de la misma
+      end note
+    deactivate contrato
+  deactivate app  
 @enduml
